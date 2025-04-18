@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->string('password');
-            $table->string('image')->nullable();
+            $table->string('imageUrl')->nullable();
             $table->string('card')->nullable();
             $table->enum('type', ['customer', 'admin'])->default('customer');
             $table->timestamps();

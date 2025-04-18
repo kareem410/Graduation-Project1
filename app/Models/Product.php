@@ -7,15 +7,25 @@ use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
-    protected $fillable = ['name', 'category', 'price', 'unit', 'stock_availability', 'counts', 'description', 'rating', 'offer', 'is_best_deal', 'top_selling', 'everyday_needs', 'image', 'new_arrival', 'barcode'];
+    protected $fillable = ['name', 'category', 'price', 'unit', 'stockAvailability', 'inStock', 'description', 'rating', 'offers', 'bestDeal', 'topSelling', 'everydayNeeds', 'imageUrl', 'new_arrival', 'barcode'];
 
     // public function wishListUsers() {
     //     return $this->belongsToMany(User::class, 'wishlist');
     // }
     public function wishListedByUsers()
     {
-        return $this->belongsToMany(MyUser::class, 'wish_list', 'product_id', 'user_id')->withTimestamps();
+        return $this->belongsToMany(MyUser::class, 'wish_list')
+                    ->withPivot('quantity')
+                    ->withTimestamps();
     }
 
    use HasFactory;
+
+   public function usersInCart()
+{
+    return $this->belongsToMany(MyUser::class, 'cart')
+        ->withPivot('quantity')
+        ->withTimestamps();
+}
+
 }

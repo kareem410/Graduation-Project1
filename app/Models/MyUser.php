@@ -13,7 +13,7 @@ class MyUser extends Authenticatable
 
     protected $table = 'myusers';
 
-    protected $fillable = ['name', 'email', 'password', 'image', 'card', 'type'];
+    protected $fillable = ['name', 'email', 'password', 'imageUrl', 'card', 'type'];
 
     protected $hidden = ['password'];
 
@@ -24,8 +24,18 @@ class MyUser extends Authenticatable
 
     public function wishList(): BelongsToMany
     {
-        return $this->belongsToMany(Product::class, 'wishlist', 'user_id', 'product_id')->withTimestamps();
+        return $this->belongsToMany(Product::class, 'wishlist', 'user_id', 'product_id')
+                    ->withPivot('quantity')
+                    ->withTimestamps();
     }
+
+    public function cart()
+    {
+        return $this->belongsToMany(Product::class, 'cart', 'user_id', 'product_id')
+                    ->withPivot('quantity')
+                    ->withTimestamps();
+    }
+
 }
 
 

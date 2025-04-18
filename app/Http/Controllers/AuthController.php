@@ -8,24 +8,57 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Validator;
 use Exception;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
+    // public function register(Request $request)
+    // {
+    //     try {
+    //         // Validate data
+    //         $validatedData = $this->validateRegister($request);
+
+    //         // Handle imageUrl upload
+    //         $imageUrlPath = null;
+    //         if ($request->hasFile('imageUrl')) {
+    //             $imageUrlPath = $request->file('imageUrl')->store('users', 'public');
+    //         }
+
+    //         // Hash password
+    //         $validatedData['password'] = Hash::make($validatedData['password']);
+    //         $validatedData['imageUrl'] = $imageUrlPath;
+
+    //         // Create user
+    //         $user = MyUser::create($validatedData);
+    //         $token = $user->createToken('auth_token')->plainTextToken;
+
+    //         return response()->json([
+    //             'message' => 'User registered successfully!',
+    //             'user' => $user,
+    //             'token' => $token
+    //         ], 201);
+    //     } catch (ValidationException $e) {
+    //         return response()->json(['error' => $e->errors()], 422);
+    //     } catch (Exception $e) {
+    //         return response()->json(['error' => 'Something went wrong!'], 500);
+    //     }
+    // }
+
     public function register(Request $request)
     {
         try {
             // Validate data
             $validatedData = $this->validateRegister($request);
 
-            // Handle image upload
-            $imagePath = null;
-            if ($request->hasFile('image')) {
-                $imagePath = $request->file('image')->store('users', 'public');
+            // Handle imageUrl upload
+            $imageUrlPath = null;
+            if ($request->hasFile('imageUrl')) {
+                $imageUrlPath = $request->file('imageUrl')->store('users', 'public');
             }
 
             // Hash password
             $validatedData['password'] = Hash::make($validatedData['password']);
-            $validatedData['image'] = $imagePath;
+            $validatedData['imageUrl'] = $imageUrlPath;
 
             // Create user
             $user = MyUser::create($validatedData);
@@ -37,10 +70,24 @@ class AuthController extends Controller
                 'token' => $token
             ], 201);
         } catch (ValidationException $e) {
+            Log::error('Validation error during registration: ' . json_encode($e->errors()));
             return response()->json(['error' => $e->errors()], 422);
         } catch (Exception $e) {
+            Log::error('User register error: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
             return response()->json(['error' => 'Something went wrong!'], 500);
         }
+    }
+
+    private function validateRegister(Request $request)
+    {
+        return Validator::make($request->all(), [
+            'name' => 'required|string',
+            'email' => 'required|email|unique:myusers,email', // Changed my_users to myusers
+            'password' => 'required|string|min:6',
+            'type' => 'required|in:customer,admin',
+            'card' => 'nullable|string',
+            'imageUrl' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ])->validate();
     }
 
     public function login(Request $request)
@@ -82,17 +129,17 @@ class AuthController extends Controller
     }
 
     // Separate validation function for register
-    private function validateRegister(Request $request)
-    {
-        return Validator::make($request->all(), [
-            'name' => 'required|string',
-            'email' => 'required|email|unique:my_users,email',
-            'password' => 'required|string|min:6',
-            'type' => 'required|in:customer,admin',
-            'card' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ])->validate();
-    }
+    // private function validateRegister(Request $request)
+    // {
+    //     return Validator::make($request->all(), [
+    //         'name' => 'required|string',
+    //         'email' => 'required|email|unique:my_users,email',
+    //         'password' => 'required|string|min:6',
+    //         'type' => 'required|in:customer,admin',
+    //         'card' => 'nullable|string',
+    //         'imageUrl' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+    //     ])->validate();
+    // }
 }
 
 

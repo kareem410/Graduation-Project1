@@ -32,8 +32,8 @@ class MyUserController extends Controller
 
         $validatedData['password'] = bcrypt($validatedData['password']);
 
-        $imagePath = $request->hasFile('image') ? $request->file('image')->store('users', 'public') : null;
-        $validatedData['image'] = $imagePath;
+        $imageUrlPath = $request->hasFile('imageUrl') ? $request->file('imageUrl')->store('users', 'public') : null;
+        $validatedData['imageUrl'] = $imageUrlPath;
 
         $user = MyUser::create($validatedData);
 
@@ -73,9 +73,9 @@ class MyUserController extends Controller
                 $validatedData['password'] = bcrypt($validatedData['password']);
             }
 
-            if ($request->hasFile('image')) {
-                if ($user->image) Storage::disk('public')->delete($user->image);
-                $validatedData['image'] = $request->file('image')->store('users', 'public');
+            if ($request->hasFile('imageUrl')) {
+                if ($user->imageUrl) Storage::disk('public')->delete($user->imageUrl);
+                $validatedData['imageUrl'] = $request->file('imageUrl')->store('users', 'public');
             }
 
             $user->update($validatedData);
@@ -95,7 +95,7 @@ class MyUserController extends Controller
         try {
             $user = MyUser::findOrFail($id);
             
-            if ($user->image) Storage::disk('public')->delete($user->image);
+            if ($user->imageUrl) Storage::disk('public')->delete($user->imageUrl);
 
             $user->delete();
             return response()->json(['message' => 'User deleted successfully!'], 200);
@@ -116,7 +116,7 @@ class MyUserController extends Controller
         'password' => $id ? 'sometimes|string|min:6' : 'required|string|min:6',
         'card' => 'nullable|string',
         'type' => 'required|string',
-        'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        'imageUrl' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
     ]);
     }
 

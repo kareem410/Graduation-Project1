@@ -21,11 +21,11 @@ class ProductController extends Controller
         try {
             $validatedData = $this->validateProductData($request);
 
-            $imagePath = $request->hasFile('image') 
-                ? $request->file('image')->store('products', 'public') 
+            $imageUrlPath = $request->hasFile('imageUrl') 
+                ? $request->file('imageUrl')->store('products', 'public') 
                 : null;
 
-            $product = Product::create(array_merge($validatedData, ['image' => $imagePath]));
+            $product = Product::create(array_merge($validatedData, ['imageUrl' => $imageUrlPath]));
 
             return response()->json(['message' => 'Product created successfully!', 'product' => $product], 201);
         } catch (ValidationException $e) {
@@ -48,9 +48,9 @@ class ProductController extends Controller
             $product = Product::findOrFail($id);
             $validatedData = $this->validateProductData($request, $id);
     
-            if ($request->hasFile('image')) {
-                Storage::disk('public')->delete($product->image);
-                $validatedData['image'] = $request->file('image')->store('products', 'public');
+            if ($request->hasFile('imageUrl')) {
+                Storage::disk('public')->delete($product->imageUrl);
+                $validatedData['imageUrl'] = $request->file('imageUrl')->store('products', 'public');
             }
     
             $product->update($validatedData);
@@ -81,36 +81,36 @@ class ProductController extends Controller
     //         if ($request->has('price')) $updateData['price'] = $request->input('price');
     //         if ($request->has('barcode')) $updateData['barcode'] = $request->input('barcode');
     //         if ($request->has('unit')) $updateData['unit'] = $request->input('unit');
-    //         if ($request->has('counts')) $updateData['counts'] = $request->input('counts');
+    //         if ($request->has('inStock')) $updateData['inStock'] = $request->input('inStock');
     //         if ($request->has('description')) $updateData['description'] = $request->input('description');
     //         if ($request->has('rating')) $updateData['rating'] = $request->input('rating');
     
     //         // Boolean fields
-    //         if ($request->has('stock_availability')) {
-    //             $updateData['stock_availability'] = $request->input('stock_availability') === 'true';
+    //         if ($request->has('stockAvailability')) {
+    //             $updateData['stockAvailability'] = $request->input('stockAvailability') === 'true';
     //         }
-    //         if ($request->has('offer')) {
-    //             $updateData['offer'] = $request->input('offer') === 'true';
+    //         if ($request->has('offers')) {
+    //             $updateData['offers'] = $request->input('offers') === 'true';
     //         }
-    //         if ($request->has('is_best_deal')) {
-    //             $updateData['is_best_deal'] = $request->input('is_best_deal') === 'true';
+    //         if ($request->has('bestDeal')) {
+    //             $updateData['bestDeal'] = $request->input('bestDeal') === 'true';
     //         }
-    //         if ($request->has('top_selling')) {
-    //             $updateData['top_selling'] = $request->input('top_selling') === 'true';
+    //         if ($request->has('topSelling')) {
+    //             $updateData['topSelling'] = $request->input('topSelling') === 'true';
     //         }
-    //         if ($request->has('everyday_needs')) {
-    //             $updateData['everyday_needs'] = $request->input('everyday_needs') === 'true';
+    //         if ($request->has('everydayNeeds')) {
+    //             $updateData['everydayNeeds'] = $request->input('everydayNeeds') === 'true';
     //         }
     //         if ($request->has('new_arrival')) {
     //             $updateData['new_arrival'] = $request->input('new_arrival') === 'true';
     //         }
     
-    //         // Handle image if present
-    //         if ($request->hasFile('image')) {
-    //             if ($product->image) {
-    //                 Storage::disk('public')->delete($product->image);
+    //         // Handle imageUrl if present
+    //         if ($request->hasFile('imageUrl')) {
+    //             if ($product->imageUrl) {
+    //                 Storage::disk('public')->delete($product->imageUrl);
     //             }
-    //             $updateData['image'] = $request->file('image')->store('products', 'public');
+    //             $updateData['imageUrl'] = $request->file('imageUrl')->store('products', 'public');
     //         }
     
     //         Log::info('Update data:', $updateData);
@@ -140,7 +140,7 @@ class ProductController extends Controller
     {
         try {
             $product = Product::findOrFail($id);
-            if ($product->image) Storage::disk('public')->delete($product->image);
+            if ($product->imageUrl) Storage::disk('public')->delete($product->imageUrl);
             $product->delete();
             return response()->json(['message' => 'Product deleted successfully!'], 200);
         } catch (Exception $e) {
@@ -154,10 +154,10 @@ class ProductController extends Controller
     {
         // Handle boolean conversions for the fields that should be boolean
         $booleanFields = [
-            'stock_availability',
-            'is_best_deal',
-            'top_selling',
-            'everyday_needs',
+            'stockAvailability',
+            'bestDeal',
+            'topSelling',
+            'everydayNeeds',
             'new_arrival'
         ];
     
@@ -177,16 +177,16 @@ class ProductController extends Controller
             'price' => 'sometimes|numeric',
             'barcode' => 'sometimes|string|unique:products,barcode,' . $id,
             'unit' => 'sometimes|string',
-            'stock_availability' => 'sometimes|boolean',
-            'counts' => 'sometimes|integer',
+            'stockAvailability' => 'sometimes|boolean',
+            'inStock' => 'sometimes|integer',
             'description' => 'sometimes|string',
             'rating' => 'sometimes|numeric|min:1|max:10',
-            'offer' => 'sometimes|numeric|min:0',
-            'is_best_deal' => 'sometimes|boolean',
-            'top_selling' => 'sometimes|boolean',
-            'everyday_needs' => 'sometimes|boolean',
+            'offers' => 'sometimes|numeric|min:0',
+            'bestDeal' => 'sometimes|boolean',
+            'topSelling' => 'sometimes|boolean',
+            'everydayNeeds' => 'sometimes|boolean',
             'new_arrival' => 'sometimes|boolean',
-            'image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'imageUrl' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
         ];
     
         // If this is a new product (no id), make all fields required
@@ -198,6 +198,24 @@ class ProductController extends Controller
     
         return $request->validate($rules);
     }
+
+    public function getByCategory($categoryName)
+    {
+        $products = \App\Models\Product::where('category', $categoryName)->get();
+
+        if ($products->isEmpty()) {
+            return response()->json([
+                'message' => 'No products found for this category.'
+            ], 404);
+        }
+
+        return response()->json([
+            'category' => $categoryName,
+            'count' => $products->count(),
+            'products' => $products
+        ]);
+    }
+
 
     // Add this helper method
 private function convertToBoolean($value)
