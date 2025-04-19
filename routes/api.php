@@ -64,8 +64,3 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::put('/products/{id}', [ProductController::class, 'update']); // Update product
     Route::delete('/products/{id}', [ProductController::class, 'destroy']); // Delete product
 });
-
-Route::middleware('cors')->group(function () {
-    Route::post('/register', [App\Http\Controllers\AuthController::class, 'register']);
-    // Add other API routes
-});
